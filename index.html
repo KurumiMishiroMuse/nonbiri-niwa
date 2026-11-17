@@ -1,0 +1,1571 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>のんびり庭育成</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f1e3;
+        --surface: #fffdf6;
+        --text: #44543c;
+        --dim: #7d8b74;
+        --border: #e3dcc4;
+        --accent: #6aa84f;
+        --accent-soft: #e6f2dc;
+        --rare: #c2703d;
+        --font-sans: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", system-ui, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg: #232b22;
+          --surface: #2e382c;
+          --text: #e8efdf;
+          --dim: #a7b69e;
+          --border: #46543f;
+          --accent: #93c47d;
+          --accent-soft: #3a4a34;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      button { font-family: inherit; cursor: pointer; }
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+      svg { display: block; }
+      .px { image-rendering: pixelated; }
+
+      .wrap { max-width: 576px; margin: 0 auto; padding: 0 16px 112px; }
+
+      /* status row */
+      .status-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0 8px; }
+      .leaf-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 999px; padding: 6px 12px;
+        font-size: 14px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      }
+      .leaf-pill svg { width: 16px; height: 16px; }
+      .status-note { font-size: 14px; color: var(--dim); }
+
+      .greeting { font-size: 18px; font-weight: 700; padding-bottom: 8px; margin: 0; }
+      h2.tab-title { font-size: 18px; font-weight: 700; margin: 0; padding: 4px 0 4px; }
+      h3.sub-title { font-size: 16px; font-weight: 700; margin: 0; }
+      .dim { color: var(--dim); }
+      .small { font-size: 14px; }
+      .tiny { font-size: 12px; }
+
+      /* scene */
+      .scene { position: relative; overflow: hidden; border-radius: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); outline: 1px solid rgba(0,0,0,0.05); isolation: isolate; }
+      .sky { position: relative; height: 176px; }
+      .ground { position: relative; }
+      .abs { position: absolute; }
+
+      /* cards & panels */
+      .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+      .hint-box { margin-top: 12px; background: var(--accent-soft); border-radius: 16px; padding: 12px 16px; font-size: 14px; line-height: 1.7; }
+      .panel { margin-top: 12px; padding: 16px; }
+      .panel-tight { margin-top: 12px; padding: 12px; }
+
+      .records { margin-top: 20px; display: flex; align-items: center; justify-content: space-around; padding: 12px; text-align: center; }
+      .records .rec-value { font-size: 16px; font-weight: 700; margin: 0; }
+      .records .rec-label { font-size: 12px; color: var(--dim); margin: 0; }
+
+      .btn-primary {
+        background: var(--accent); color: #fff; border: none; border-radius: 999px;
+        padding: 12px 16px; font-size: 16px; font-weight: 700; width: 100%;
+      }
+      .btn-primary:disabled { opacity: 0.5; }
+      .btn-water {
+        background: #dceefb; color: #2b5f7a; border: none; border-radius: 999px;
+        padding: 12px 16px; font-size: 16px; font-weight: 700; flex: 1;
+      }
+      .btn-water:disabled { opacity: 0.5; }
+      .btn-buy {
+        background: var(--accent); color: #fff; border: none; border-radius: 999px;
+        padding: 10px 20px; font-size: 16px; font-weight: 700; white-space: nowrap;
+      }
+      .btn-buy:disabled { opacity: 0.4; }
+      .btn-buy-sm { padding: 10px 16px; font-size: 15px; }
+      .pill-off {
+        border-radius: 999px; background: var(--border); color: var(--dim);
+        padding: 6px 12px; font-size: 14px; font-weight: 700; white-space: nowrap; display: inline-block;
+      }
+      .pill-owned {
+        border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+        padding: 6px 12px; font-size: 14px; font-weight: 700; white-space: nowrap; display: inline-block;
+      }
+
+      .progress { margin-top: 6px; height: 10px; overflow: hidden; border-radius: 999px; background: var(--border); }
+      .progress > div { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.5s; }
+
+      /* seed picker */
+      .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .seed-btn {
+        display: flex; align-items: center; gap: 8px; text-align: left;
+        background: var(--accent-soft); border: none; border-radius: 12px; padding: 8px 10px; color: var(--text);
+      }
+      .seed-btn:disabled { opacity: 0.4; }
+      .seed-btn .seed-art { width: 40px; height: 40px; flex-shrink: 0; }
+      .seed-btn .seed-name { display: block; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .seed-btn .seed-meta { display: flex; flex-wrap: wrap; column-gap: 4px; font-size: 11px; color: var(--dim); }
+      .seed-btn .seed-meta span { white-space: nowrap; }
+      .shop-only-row {
+        display: flex; width: 100%; align-items: center; gap: 8px; text-align: left;
+        background: none; border: none; border-radius: 8px; padding: 4px 6px; opacity: 0.6; color: var(--text);
+      }
+      .shop-only-row .seed-art { width: 28px; height: 28px; flex-shrink: 0; }
+      .shop-only-row .seed-name { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* book */
+      .book-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .book-entry { padding: 12px; text-align: center; }
+      .book-entry .art { width: 64px; height: 64px; margin: 0 auto; }
+      .book-entry .name { font-weight: 700; margin: 4px 0 0; }
+      .book-entry ul { list-style: none; margin: 4px 0 0; padding: 0; font-size: 12px; line-height: 1.7; color: var(--dim); }
+      .book-entry ul li { overflow-wrap: break-word; }
+      .rare-line { font-weight: 700; color: var(--rare); }
+
+      /* journal */
+      .journal-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+      .journal-item { display: flex; gap: 12px; padding: 12px 16px; }
+      .journal-dot { margin-top: 8px; width: 10px; height: 10px; flex-shrink: 0; border-radius: 999px; }
+      .journal-item p { margin: 0; }
+      .wake-zone { margin-top: 40px; border-top: 1px solid var(--border); padding: 16px 0 8px; text-align: center; }
+      .wake-link { background: none; border: none; font-size: 12px; color: var(--dim); text-decoration: underline dotted; text-underline-offset: 4px; padding: 8px 12px; }
+      .wake-confirm { max-width: 384px; margin: 0 auto; padding: 16px; }
+      .btn-wake { flex: 1; background: var(--dim); color: #fff; border: none; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 700; }
+      .btn-stay { flex: 1; background: var(--accent-soft); color: var(--accent); border: none; border-radius: 999px; padding: 10px 16px; font-size: 14px; font-weight: 700; }
+
+      /* shop */
+      .shop-card { padding: 12px 16px; margin-bottom: 8px; }
+      .shop-head { display: flex; align-items: flex-start; gap: 12px; }
+      .shop-art { width: 48px; height: 48px; flex-shrink: 0; }
+      .shop-name-row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 4px; margin: 0; }
+      .shop-name { font-weight: 700; }
+      .badge {
+        flex-shrink: 0; border-radius: 999px; background: var(--accent-soft); color: var(--accent);
+        padding: 2px 8px; font-size: 11px; font-weight: 700; white-space: nowrap;
+      }
+      .item-list { list-style: none; margin: 4px 0 0; padding: 0; font-size: 12px; line-height: 1.7; color: var(--dim); }
+      .item-list li { overflow-wrap: break-word; }
+      .shop-buy-row { display: flex; justify-content: flex-end; padding-top: 10px; }
+      .deco-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 8px; }
+      .deco-row .deco-name { font-weight: 700; margin: 0; }
+      .deco-row .deco-desc { font-size: 12px; color: var(--dim); margin: 0; }
+      .deco-thumb { flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+      /* toast */
+      .toast {
+        position: fixed; left: 0; right: 0; bottom: 96px; z-index: 30;
+        display: flex; justify-content: center; padding: 0 16px; pointer-events: none;
+      }
+      .toast p {
+        margin: 0; background: #44543c; color: #fdf6e3; border-radius: 999px;
+        padding: 10px 20px; font-size: 14px; font-weight: 700; box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        max-width: 100%; text-align: center;
+      }
+      @media (prefers-color-scheme: dark) { .toast p { background: #e8efdf; color: #2e382c; } }
+
+      /* bottom nav */
+      .tabbar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+        background: var(--surface); border-top: 1px solid var(--border);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .tabbar-inner { max-width: 576px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+      .tab-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        background: none; border: none; padding: 10px 0; font-size: 12px; font-weight: 700; color: var(--dim);
+        min-height: 3rem;
+      }
+      .tab-btn.active { color: var(--accent); }
+      .tab-btn svg { width: 24px; height: 24px; }
+
+      /* animations (from the original) */
+      @keyframes sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+      @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4%); } }
+      @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes bloom-pop { 0% { transform: scale(0.6); opacity: 0.4; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+      @keyframes gentle-in { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      @keyframes drift {
+        0% { transform: translate(0, 0); opacity: 0; }
+        12% { opacity: 0.85; }
+        50% { transform: translate(10px, -16px); opacity: 0.55; }
+        88% { opacity: 0.8; }
+        100% { transform: translate(-6px, -30px); opacity: 0; }
+      }
+      @keyframes mist-drift { 0%, 100% { transform: translateX(-3%); opacity: 0.5; } 50% { transform: translateX(3%); opacity: 0.85; } }
+      @keyframes twinkle {
+        0%, 100% { transform: scale(0.4) rotate(0deg); opacity: 0; }
+        45% { transform: scale(1) rotate(20deg); opacity: 1; }
+        60% { transform: scale(0.8) rotate(30deg); opacity: 0.9; }
+      }
+      @keyframes glow-breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.85; } }
+      .anim-sway { animation: sway 3.6s ease-in-out infinite; transform-origin: top center; }
+      .anim-bob { animation: bob 2.8s ease-in-out infinite; }
+      .anim-spin-slow { animation: spin-slow 7s linear infinite; }
+      .anim-bloom { animation: bloom-pop 0.7s ease-out; display: block; }
+      .anim-gentle-in { animation: gentle-in 0.35s ease-out; }
+      .anim-mist { animation: mist-drift 11s ease-in-out infinite; }
+      .anim-glow { animation: glow-breathe 5s ease-in-out infinite; }
+      .particle { animation: drift 9s ease-in-out infinite; }
+      .sparkle { animation: twinkle 2.6s ease-in-out infinite; transform-origin: center; }
+      @media (prefers-reduced-motion: reduce) {
+        .anim-sway, .anim-bob, .anim-spin-slow, .anim-bloom, .anim-gentle-in,
+        .anim-mist, .anim-glow, .particle, .sparkle { animation: none; }
+        .particle, .sparkle { opacity: 0; }
+      }
+
+      .plot-btn { position: absolute; display: block; border: none; padding: 0; cursor: pointer; }
+      .visitor-label {
+        margin-top: 2px; display: inline-block; border-radius: 999px; background: rgba(255,255,255,0.85);
+        padding: 2px 8px; font-size: 11px; font-weight: 700; color: #44543c; white-space: nowrap;
+      }
+      .ready-badge {
+        position: absolute; top: -8px; right: 0; border-radius: 999px; background: #fdf6e3;
+        padding: 2px 6px; font-size: 10px; font-weight: 700; white-space: nowrap; color: #8a6543;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+      .loading { padding: 64px 0; text-align: center; color: var(--dim); }
+    </style>
+  </head>
+  <body>
+    <main class="wrap" id="app">
+      <p class="loading">庭をのぞいています…</p>
+    </main>
+    <div id="toast-root"></div>
+    <nav class="tabbar" aria-label="がめんきりかえ">
+      <div class="tabbar-inner" id="tabbar"></div>
+    </nav>
+    <script>
+    "use strict";
+    /* ================= catalog (same data as the original) ================= */
+    var PLANTS = [
+      { id: "tanpopo", name: "たんぽぽ", growMin: 3, yieldLeaves: 4, seedCost: 2, season: "spring", rare: false, hint: "", style: "puff", petal: "#f7d038", petalDark: "#eab308", center: "#f7d038" },
+      { id: "clover", name: "クローバー", growMin: 5, yieldLeaves: 6, seedCost: 3, season: "spring", rare: false, hint: "", style: "clover", petal: "#ffffff", petalDark: "#e8e8e8", center: "#f9a8d4" },
+      { id: "sumire", name: "すみれ", growMin: 10, yieldLeaves: 9, seedCost: 5, season: "spring", rare: false, hint: "", style: "petal", petal: "#a78bfa", petalDark: "#7c5cd6", center: "#fde68a" },
+      { id: "nanohana", name: "なのはな", growMin: 12, yieldLeaves: 10, seedCost: 6, season: "spring", rare: false, hint: "", style: "puff", petal: "#fde047", petalDark: "#facc15", center: "#fef08a" },
+      { id: "tulip", name: "チューリップ", growMin: 15, yieldLeaves: 13, seedCost: 8, season: "spring", rare: false, hint: "", style: "cup", petal: "#f472b6", petalDark: "#db2777", center: "#fbcfe8" },
+      { id: "marigold", name: "マリーゴールド", growMin: 20, yieldLeaves: 15, seedCost: 10, season: "summer", rare: false, hint: "", style: "puff", petal: "#fb923c", petalDark: "#ea580c", center: "#fdba74" },
+      { id: "asagao", name: "あさがお", growMin: 25, yieldLeaves: 18, seedCost: 12, season: "summer", rare: false, hint: "", style: "bell", petal: "#60a5fa", petalDark: "#2563eb", center: "#eff6ff" },
+      { id: "pansy", name: "パンジー", growMin: 30, yieldLeaves: 16, seedCost: 10, season: "winter", rare: false, hint: "", style: "petal", petal: "#8b5cf6", petalDark: "#6d28d9", center: "#fde047" },
+      { id: "suisen", name: "すいせん", growMin: 35, yieldLeaves: 19, seedCost: 12, season: "winter", rare: false, hint: "", style: "cup", petal: "#fef9c3", petalDark: "#fde047", center: "#f59e0b" },
+      { id: "cosmos", name: "コスモス", growMin: 40, yieldLeaves: 22, seedCost: 14, season: "autumn", rare: false, hint: "", style: "petal", petal: "#f9a8d4", petalDark: "#ec4899", center: "#fde047" },
+      { id: "ajisai", name: "あじさい", growMin: 45, yieldLeaves: 24, seedCost: 15, season: "summer", rare: false, hint: "", style: "puff", petal: "#93c5fd", petalDark: "#818cf8", center: "#dbeafe" },
+      { id: "kikyou", name: "ききょう", growMin: 50, yieldLeaves: 27, seedCost: 18, season: "autumn", rare: false, hint: "", style: "bell", petal: "#a78bfa", petalDark: "#7c3aed", center: "#ede9fe" },
+      { id: "bara", name: "バラ", growMin: 60, yieldLeaves: 33, seedCost: 22, season: "autumn", rare: false, hint: "", style: "petal", petal: "#fb7185", petalDark: "#be123c", center: "#fda4af" },
+      { id: "lavender", name: "ラベンダー", growMin: 90, yieldLeaves: 42, seedCost: 28, season: "summer", rare: false, hint: "", style: "spike", petal: "#c4b5fd", petalDark: "#8b5cf6", center: "#ddd6fe" },
+      { id: "himawari", name: "ひまわり", growMin: 120, yieldLeaves: 50, seedCost: 32, season: "summer", rare: false, hint: "", style: "petal", petal: "#facc15", petalDark: "#eab308", center: "#92400e" },
+      { id: "shiro-tanpopo", name: "しろたんぽぽ", growMin: 5, yieldLeaves: 44, seedCost: 18, season: "spring", rare: true, hint: "たんぽぽとクローバーがとなりあう庭で、まれにみつかるらしい。", style: "puff", petal: "#ffffff", petalDark: "#e5e7eb", center: "#fef9c3" },
+      { id: "tsuki-sumire", name: "つきあかりスミレ", growMin: 12, yieldLeaves: 54, seedCost: 22, season: "spring", rare: true, hint: "すみれを何度もしゅうかくしていると、出会えることがある。", style: "petal", petal: "#fef3c7", petalDark: "#fcd34d", center: "#ffffff" },
+      { id: "yuuyake-tulip", name: "ゆうやけチューリップ", growMin: 20, yieldLeaves: 64, seedCost: 26, season: "spring", rare: true, hint: "チューリップのそばでマリーゴールドがさくと…？", style: "cup", petal: "#fb923c", petalDark: "#f472b6", center: "#ffedd5" },
+      { id: "gin-cosmos", name: "ぎんいろコスモス", growMin: 40, yieldLeaves: 74, seedCost: 30, season: "autumn", rare: true, hint: "コスモスのしゅうかくの時、まれに銀色がまざることがある。", style: "petal", petal: "#f8fafc", petalDark: "#cbd5e1", center: "#fde047" },
+      { id: "niji-bara", name: "にじいろのバラ", growMin: 60, yieldLeaves: 84, seedCost: 34, season: "autumn", rare: true, hint: "バラとあじさいがとなりあう庭で、まれにみつかるらしい。", style: "petal", petal: "#f9a8d4", petalDark: "#f59e0b", center: "#fef3c7" },
+      { id: "hoshi-lavender", name: "ほしぞらラベンダー", growMin: 90, yieldLeaves: 99, seedCost: 40, season: "summer", rare: true, hint: "ラベンダーを何度もしゅうかくしていると、出会えることがある。", style: "spike", petal: "#818cf8", petalDark: "#3730a3", center: "#e0e7ff" }
+    ];
+    var plantById = {};
+    PLANTS.forEach(function (p) { plantById[p.id] = p; });
+
+    var DISCOVERY_RULES = [
+      { kind: "combo", rareId: "shiro-tanpopo", a: "tanpopo", b: "clover", chance: 0.4 },
+      { kind: "combo", rareId: "yuuyake-tulip", a: "tulip", b: "marigold", chance: 0.4 },
+      { kind: "combo", rareId: "niji-bara", a: "bara", b: "ajisai", chance: 0.35 },
+      { kind: "count", rareId: "tsuki-sumire", plantId: "sumire", count: 8 },
+      { kind: "count", rareId: "hoshi-lavender", plantId: "lavender", count: 5 },
+      { kind: "random", rareId: "gin-cosmos", plantId: "cosmos", chance: 0.1 }
+    ];
+
+    var DECORATIONS = [
+      { id: "fence", name: "しろいさく", cost: 60, desc: "庭の周りに、小さな白いさく。" },
+      { id: "stones", name: "とびいし", cost: 50, desc: "げんかんからはたけへ続く、丸い石。" },
+      { id: "planter", name: "プランター", cost: 70, desc: "家のわきに置く、木のプランター。" },
+      { id: "bench", name: "ベンチ", cost: 80, desc: "こしかけて庭をながめるベンチ。" },
+      { id: "pinwheel", name: "かざぐるま", cost: 90, desc: "風の日に、くるくる回る。" },
+      { id: "birdbath", name: "鳥の水飲み場", cost: 100, desc: "小鳥が水を飲みに来るかも。" },
+      { id: "lamp", name: "ランプ", cost: 120, desc: "夜になると、ぽっと明かりがともる。" }
+    ];
+
+    var VISITORS = [
+      { id: "neko", name: "ねこ", lines: ["ねこが昼寝して行った。", "ねこが庭をひとまわりして、満足そうに帰って行った。", "ねこが花のにおいをかいで行った。"] },
+      { id: "kotori", name: "ことり", lines: ["ことりが歌って行った。", "ことりが枝で羽を休めて行った。"] },
+      { id: "suzume", name: "すずめ", lines: ["すずめが2わ、ならんで休んで行った。", "すずめが庭で朝ごはんをさがして行った。"] },
+      { id: "chou", name: "ちょうちょう", lines: ["ちょうちょうが花の間を飛んで行った。", "ちょうちょうが、ひらひらと庭を横切って行った。"] },
+      { id: "hachi", name: "みつばち", lines: ["みつばちが花にあいさつして行った。", "みつばちが、ぶんぶんと働いて行った。"] }
+    ];
+    var visitorById = {};
+    VISITORS.forEach(function (v) { visitorById[v.id] = v; });
+
+    var LIFE_LINES_GENERIC = [
+      "せんたくものをとりこんだ。太陽のにおいがした。",
+      "えんがわでお茶を飲んだ。",
+      "ポストに手紙が届いていた。",
+      "窓辺で少し昼寝をした。",
+      "夕ごはんの支度をした。いいにおい。",
+      "せんたくものを干した。風が気持ちいい。"
+    ];
+    var LIFE_LINES_BY_SEASON = {
+      spring: ["桜の花びらが庭にまいこんできた。", "せんたくものが春の風にゆれていた。", "庭のすみで、てんとうむしを見つけた。"],
+      summer: ["ふうりんがちりんとなった。", "夕立の後、空ににじが出た。", "すいかを冷やした。よく冷えている。", "あさがおのつるが、少しのびていた。"],
+      autumn: ["きんもくせいの香りが、どこからかただよってきた。", "落ち葉を少しはいた。", "夕焼けがきれいだったので、しばらくながめた。"],
+      winter: ["温かいお茶で手を温めた。", "窓の外に初雪が見えた。", "こたつでみかんを食べた。", "せんたくものが、ぱりっとこおる朝だった。"]
+    };
+    var SEASON_NAMES = { spring: "春", summer: "夏", autumn: "秋", winter: "冬" };
+    function seasonOfMonth(month) {
+      if (month >= 3 && month <= 5) return "spring";
+      if (month >= 6 && month <= 8) return "summer";
+      if (month >= 9 && month <= 11) return "autumn";
+      return "winter";
+    }
+
+    /* ================= game constants (same as the original) ================= */
+    var OFFLINE_CAP_MS = 8 * 60 * 60 * 1000;
+    var SEASON_SPEEDUP = 0.8;
+    var WATER_BOOST_RATIO = 0.05;
+    var WATER_BOOST_CAP_RATIO = 0.3;
+    var ROLL_INTERVAL_MS = 30 * 60 * 1000;
+    var VISITOR_STAY_MS = 2 * 60 * 60 * 1000;
+    var START_LEAVES = 12;
+    var NUM_PLOTS = 6;
+    var PLOT_COLS = 2;
+    var MIN_SEED_COST = Math.min.apply(null, PLANTS.map(function (p) { return p.seedCost; }));
+    var CHEAPEST_PLANT = PLANTS.reduce(function (a, b) { return b.seedCost < a.seedCost ? b : a; });
+
+    /* ---- daily shop lineup: deterministic from the device's local date ---- */
+    function localDateString(nowMs) {
+      var d = new Date(nowMs);
+      var m = String(d.getMonth() + 1).padStart(2, "0");
+      var day = String(d.getDate()).padStart(2, "0");
+      return d.getFullYear() + "-" + m + "-" + day;
+    }
+    function localDayNumber(nowMs) {
+      var d = new Date(nowMs);
+      return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+    }
+    function hashString(s) {
+      var h = 2166136261;
+      for (var i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+      return h >>> 0;
+    }
+    function mulberry32(seed) {
+      var t = seed;
+      return function () {
+        t += 0x6d2b79f5;
+        var r = Math.imul(t ^ (t >>> 15), 1 | t);
+        r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function shuffled(items, rng) {
+      var arr = items.slice();
+      for (var i = arr.length - 1; i > 0; i--) {
+        var j = Math.floor(rng() * (i + 1));
+        var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      return arr;
+    }
+    function dailyLineup(nowMs, season) {
+      var rng = mulberry32(hashString("nonbiri-shop-" + localDateString(nowMs)));
+      var always = CHEAPEST_PLANT;
+      var seasonPool = PLANTS.filter(function (p) { return !p.rare && p.season === season && p.id !== always.id; });
+      var rarePool = PLANTS.filter(function (p) { return p.rare; });
+      var rareCount = rarePool.length > 0 && rng() < 0.55 ? 1 : 0;
+      var seasonCount = Math.min(seasonPool.length, 2 + Math.floor(rng() * 2));
+      var randomCount = 6 - 1 - rareCount - seasonCount;
+      if (randomCount < 2) { seasonCount -= 2 - randomCount; randomCount = 2; }
+      if (randomCount > 3) { seasonCount += randomCount - 3; randomCount = 3; }
+      seasonCount = Math.max(0, Math.min(seasonCount, seasonPool.length));
+      var seasonPicks = shuffled(seasonPool, rng).slice(0, seasonCount);
+      var picked = {};
+      picked[always.id] = true;
+      seasonPicks.forEach(function (p) { picked[p.id] = true; });
+      var randomPool = PLANTS.filter(function (p) { return !p.rare && !picked[p.id]; });
+      var randomPicks = shuffled(randomPool, rng).slice(0, randomCount);
+      var rarePicks = rareCount > 0 ? shuffled(rarePool, rng).slice(0, 1) : [];
+      var out = [{ plantId: always.id, category: "always" }];
+      seasonPicks.forEach(function (p) { out.push({ plantId: p.id, category: "season" }); });
+      randomPicks.forEach(function (p) { out.push({ plantId: p.id, category: "random" }); });
+      rarePicks.forEach(function (p) { out.push({ plantId: p.id, category: "rare" }); });
+      return out;
+    }
+
+    /* ================= save data (this browser only) ================= */
+    var SAVE_KEY = "nonbiri-garden-v1";
+    var S = null; // save object
+
+    function freshSave(now) {
+      var plots = [];
+      for (var i = 0; i < NUM_PLOTS; i++) plots.push({ plantId: null, plantedAt: null, boostMs: 0 });
+      var inv = {};
+      inv[CHEAPEST_PLANT.id] = 3;
+      return {
+        leaves: START_LEAVES,
+        totalHarvests: 0,
+        startedAt: now,
+        plots: plots,
+        discoveries: [],
+        decorations: [],
+        inventory: inv,
+        stats: {},
+        journal: [{ id: 1, text: "庭づくりを始めた。", kind: "start", createdAt: now }],
+        nextJournalId: 2,
+        visitorId: null,
+        visitorUntil: null,
+        lastRollAt: now,
+        rareBoughtDate: null,
+        rareBoughtPlantId: null
+      };
+    }
+    function save() {
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: play on in memory */ }
+    }
+    function loadSave(now) {
+      try {
+        var raw = localStorage.getItem(SAVE_KEY);
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.plots) && typeof parsed.leaves === "number") {
+            // normalize: always exactly NUM_PLOTS plots
+            var plots = [];
+            for (var i = 0; i < NUM_PLOTS; i++) {
+              var p = parsed.plots[i];
+              plots.push(p && p.plantId ? { plantId: p.plantId, plantedAt: p.plantedAt, boostMs: p.boostMs || 0 } : { plantId: null, plantedAt: null, boostMs: 0 });
+            }
+            parsed.plots = plots;
+            parsed.inventory = parsed.inventory || {};
+            parsed.discoveries = parsed.discoveries || [];
+            parsed.decorations = parsed.decorations || [];
+            parsed.stats = parsed.stats || {};
+            parsed.journal = parsed.journal || [];
+            parsed.nextJournalId = parsed.nextJournalId || (parsed.journal.length + 1);
+            return parsed;
+          }
+        }
+      } catch (e) { /* fall through to a fresh garden */ }
+      var fresh = freshSave(now);
+      S = fresh;
+      save();
+      return fresh;
+    }
+    function addJournal(text, kind, now) {
+      S.journal.unshift({ id: S.nextJournalId++, text: text, kind: kind, createdAt: now });
+      if (S.journal.length > 300) S.journal.length = 300;
+    }
+
+    /* ================= growth ================= */
+    function growMsFor(plantId, season) {
+      var plant = plantById[plantId];
+      if (!plant) return 0;
+      var base = plant.growMin * 60 * 1000;
+      return plant.season === season ? Math.round(base * SEASON_SPEEDUP) : base;
+    }
+    function plotState(plot, now, season) {
+      if (!plot.plantId || plot.plantedAt == null) {
+        return { plantId: null, stage: null, progress: 0, ready: false };
+      }
+      var growMs = growMsFor(plot.plantId, season);
+      var elapsed = Math.min(now - plot.plantedAt, OFFLINE_CAP_MS) + plot.boostMs;
+      var progress = growMs > 0 ? Math.min(1, Math.max(0, elapsed / growMs)) : 1;
+      var stage = progress >= 1 ? 3 : progress >= 0.62 ? 2 : progress >= 0.3 ? 1 : 0;
+      return { plantId: plot.plantId, stage: stage, progress: progress, ready: progress >= 1 };
+    }
+
+    /* gentle ambient roll: a visitor, or a fragment of daily life */
+    function maybeAmbientRoll(now, season) {
+      if (now - S.lastRollAt < ROLL_INTERVAL_MS) return;
+      S.lastRollAt = now;
+      var visitorActive = S.visitorId != null && (S.visitorUntil || 0) > now;
+      var roll = Math.random();
+      if (!visitorActive && roll < 0.4) {
+        var visitor = VISITORS[Math.floor(Math.random() * VISITORS.length)];
+        if (visitor) {
+          S.visitorId = visitor.id;
+          S.visitorUntil = now + VISITOR_STAY_MS;
+          var line = visitor.lines[Math.floor(Math.random() * visitor.lines.length)];
+          if (line) addJournal(line, "visitor", now);
+        }
+      } else if (roll < 0.68) {
+        var pool = LIFE_LINES_GENERIC.concat(LIFE_LINES_BY_SEASON[season]);
+        var life = pool[Math.floor(Math.random() * pool.length)];
+        if (life) addJournal(life, "life", now);
+      }
+      save();
+    }
+
+    /* opening the garden: anti-deadlock top-up + ambient roll */
+    function onOpen(now, season) {
+      var allEmpty = S.plots.every(function (p) { return p.plantId == null; });
+      if (S.leaves < MIN_SEED_COST && allEmpty) {
+        S.leaves = MIN_SEED_COST;
+        addJournal("風で、はっぱが少しまいこんできた。", "life", now);
+        save();
+      }
+      maybeAmbientRoll(now, season);
+    }
+
+    /* ================= pixel art (ported from the original) ================= */
+    function shade(hex, amt) {
+      var n = hex.replace("#", "");
+      if (n.length !== 6) return hex;
+      var num = parseInt(n, 16);
+      var clamp = function (v) { return Math.max(0, Math.min(255, v)); };
+      var r = clamp((num >> 16) + amt);
+      var g = clamp(((num >> 8) & 0xff) + amt);
+      var b = clamp((num & 0xff) + amt);
+      var s = ((r << 16) | (g << 8) | b).toString(16);
+      while (s.length < 6) s = "0" + s;
+      return "#" + s;
+    }
+    function lightC(c, a) { return shade(c, a == null ? 34 : a); }
+    function darkC(c, a) { return shade(c, -(a == null ? 30 : a)); }
+
+    var STEM = "#5d8a52", STEM_DARK = "#476b3e", STEM_LIGHT = "#7ba56e";
+    var LEAF = "#6da05f", LEAF_DARK = "#4e7d43", LEAF_LIGHT = "#8fb87f";
+    var SOIL_DOT = "#8a6543";
+
+    function pxPut(px, x, y, c) { if (x >= 0 && x < 32 && y >= 0 && y < 32) px.push([x, y, c]); }
+    function pxBlock(px, x, y, w, h, c) { for (var i = 0; i < w; i++) for (var j = 0; j < h; j++) pxPut(px, x + i, y + j, c); }
+    function pxEllipse(px, cx, cy, rx, ry, c) {
+      for (var y = -ry; y <= ry; y++) for (var x = -rx; x <= rx; x++)
+        if ((x * x) / (rx * rx + 0.01) + (y * y) / (ry * ry + 0.01) <= 1) pxPut(px, cx + x, cy + y, c);
+    }
+    function petalShape(px, cx, cy, rx, ry, base, edge) {
+      pxEllipse(px, cx, cy, rx, ry, base);
+      for (var x = -rx; x <= rx; x++) {
+        var yEdge = Math.floor(ry * Math.sqrt(Math.max(0, 1 - (x * x) / (rx * rx + 0.01))));
+        pxPut(px, cx + x, cy + yEdge, edge);
+        if (yEdge > 1) pxPut(px, cx + x, cy + yEdge - 1, Math.abs(x) % 2 === 0 ? edge : base);
+      }
+      pxPut(px, cx - Math.max(1, rx - 2), cy - Math.max(1, ry - 2), lightC(base, 42));
+      pxPut(px, cx - Math.max(1, rx - 3), cy - Math.max(1, ry - 3), lightC(base, 42));
+    }
+    function stem32(px, topY) {
+      for (var y = topY; y <= 30; y++) {
+        pxPut(px, 15, y, y % 3 === 2 ? STEM_DARK : STEM);
+        pxPut(px, 16, y, STEM_DARK);
+        if (y % 4 === 0) pxPut(px, 15, y, STEM_LIGHT);
+      }
+    }
+    function leaf32(px, baseX, baseY, dir, size) {
+      size = size == null ? 1 : size;
+      var len = Math.round(8 * size);
+      var wid = Math.round(4 * size);
+      for (var i = 0; i < len; i++) {
+        var t = i / len;
+        var w = Math.max(1, Math.round(wid * Math.sin(Math.PI * Math.min(1, t * 1.15))));
+        for (var j = -w; j <= 0; j++) {
+          var c = j === 0 ? LEAF_DARK : j === -w ? LEAF_DARK : i % 2 === 0 ? LEAF : LEAF_DARK;
+          pxPut(px, baseX + dir * i, baseY - Math.round(t * 3) + j, c);
+        }
+        for (var k = 1; k <= Math.max(0, w - 1); k++) pxPut(px, baseX + dir * i, baseY - Math.round(t * 3) + k, LEAF_LIGHT);
+        pxPut(px, baseX + dir * i, baseY - Math.round(t * 3), STEM_DARK);
+      }
+    }
+    function flower32(px, plant) {
+      var petal = plant.petal, petalDark = plant.petalDark, center = plant.center, style = plant.style;
+      var petalHi = lightC(petal, 40);
+      var i, x, y;
+      if (style === "cup") {
+        pxBlock(px, 10, 6, 12, 9, petal);
+        pxBlock(px, 10, 6, 3, 9, petalDark);
+        pxBlock(px, 19, 6, 3, 9, lightC(petal, 18));
+        pxPut(px, 10, 5, petalDark); pxPut(px, 11, 5, petalDark); pxPut(px, 15, 4, petalDark); pxPut(px, 16, 4, petalDark); pxPut(px, 21, 5, petalDark); pxPut(px, 20, 5, petalDark);
+        pxPut(px, 10, 4, petal); pxPut(px, 15, 3, petal); pxPut(px, 21, 4, petal);
+        pxBlock(px, 15, 7, 2, 6, petalDark);
+        pxBlock(px, 12, 13, 8, 2, darkC(petal, 16));
+        pxPut(px, 12, 8, petalHi); pxPut(px, 13, 9, petalHi);
+        pxBlock(px, 15, 8, 2, 2, center);
+      } else if (style === "puff") {
+        pxEllipse(px, 16, 9, 8, 7, petal);
+        pxEllipse(px, 16, 10, 8, 6, petal);
+        var dots = [[11,5],[16,4],[21,5],[9,9],[13,8],[18,7],[22,10],[12,12],[17,12],[20,13],[15,10],[10,13]];
+        for (i = 0; i < dots.length; i++) { x = dots[i][0]; y = dots[i][1]; pxPut(px, x, y, petalDark); pxPut(px, x + 1, y, petalDark); pxPut(px, x, y + 1, petalDark); }
+        var his = [[12,6],[17,5],[20,8],[14,11],[19,11]];
+        for (i = 0; i < his.length; i++) pxPut(px, his[i][0], his[i][1], petalHi);
+        pxPut(px, 15, 9, center); pxPut(px, 16, 9, center); pxPut(px, 18, 10, center);
+        pxPut(px, 10, 15, petalDark); pxPut(px, 14, 16, petalDark); pxPut(px, 19, 15, petalDark); pxPut(px, 22, 14, petalDark);
+      } else if (style === "bell") {
+        pxBlock(px, 9, 4, 14, 3, petal);
+        pxBlock(px, 9, 4, 14, 1, petalHi);
+        pxPut(px, 9, 4, petalDark); pxPut(px, 22, 4, petalDark);
+        pxBlock(px, 11, 7, 10, 2, petal);
+        pxBlock(px, 13, 9, 6, 2, petalDark);
+        pxBlock(px, 14, 11, 4, 2, petalDark);
+        pxBlock(px, 15, 13, 2, 1, darkC(petalDark, 14));
+        pxEllipse(px, 16, 5, 3, 1, center);
+        pxPut(px, 12, 6, petalHi); pxPut(px, 19, 6, lightC(petal, 20));
+        pxPut(px, 23, 7, LEAF); pxPut(px, 24, 8, LEAF_DARK); pxPut(px, 24, 6, LEAF_LIGHT);
+      } else if (style === "spike") {
+        for (y = 2; y <= 15; y++) {
+          var spread = y < 5 ? 1 : y < 10 ? 2 : 1;
+          pxPut(px, 16, y, y % 2 ? petal : petalDark);
+          pxPut(px, 15, y, petalDark);
+          if (spread >= 1) pxPut(px, 17, y, y % 2 ? petalDark : petal);
+          if (spread >= 2 && y % 2 === 0) { pxPut(px, 14, y, petal); pxPut(px, 18, y, petalDark); }
+          if (y % 3 === 0) pxPut(px, 16, y, petalHi);
+        }
+        pxPut(px, 16, 2, center); pxPut(px, 15, 6, center);
+      } else if (style === "clover") {
+        var circles = [[9,21],[22,21],[15,15]];
+        for (i = 0; i < circles.length; i++) {
+          var cx = circles[i][0], cy = circles[i][1];
+          pxEllipse(px, cx, cy, 5, 4, LEAF);
+          pxEllipse(px, cx, cy + 1, 5, 3, LEAF_DARK);
+          pxEllipse(px, cx - 1, cy - 1, 3, 2, LEAF_LIGHT);
+          pxPut(px, cx, cy, LEAF_DARK); pxPut(px, cx, cy + 1, LEAF_DARK); pxPut(px, cx, cy + 2, LEAF_DARK);
+          pxPut(px, cx - 2, cy - 2, lightC(LEAF, 26));
+        }
+        // small white flower tucked in close above the right leaf, on a
+        // two-pixel stem, with a darker backing ring — reads as a flower,
+        // not a floating speck (latest form from the original)
+        for (y = 14; y <= 21; y++) { pxPut(px, 22, y, STEM); pxPut(px, 23, y, STEM_DARK); }
+        pxEllipse(px, 23, 10, 5, 5, petalDark);
+        petalShape(px, 21, 8, 2, 2, petal, petalDark);
+        petalShape(px, 25, 8, 2, 2, petal, petalDark);
+        petalShape(px, 21, 12, 2, 2, petal, petalDark);
+        petalShape(px, 25, 12, 2, 2, petal, petalDark);
+        pxEllipse(px, 23, 10, 1, 1, center);
+      } else {
+        petalShape(px, 16, 4, 4, 3, petal, petalDark);
+        petalShape(px, 9, 8, 4, 3, petal, petalDark);
+        petalShape(px, 23, 8, 4, 3, petal, petalDark);
+        petalShape(px, 11, 14, 4, 3, petal, petalDark);
+        petalShape(px, 21, 14, 4, 3, petal, petalDark);
+        pxEllipse(px, 16, 9, 3, 3, center);
+        pxEllipse(px, 16, 9, 2, 2, darkC(center, 18));
+        pxPut(px, 15, 8, lightC(center, 40)); pxPut(px, 17, 10, lightC(center, 24)); pxPut(px, 16, 9, center);
+      }
+    }
+    function plantPixels(plant, stage) {
+      var px = [];
+      if (stage === 0) {
+        pxBlock(px, 11, 29, 10, 2, SOIL_DOT);
+        pxPut(px, 13, 28, SOIL_DOT); pxPut(px, 19, 28, SOIL_DOT);
+        for (var y = 24; y <= 29; y++) { pxPut(px, 15, y, STEM); pxPut(px, 16, y, STEM_DARK); }
+        pxEllipse(px, 11, 22, 4, 2, LEAF);
+        pxEllipse(px, 11, 23, 4, 1, LEAF_DARK);
+        pxPut(px, 9, 21, LEAF_LIGHT); pxPut(px, 10, 21, LEAF_LIGHT);
+        pxEllipse(px, 21, 22, 4, 2, LEAF);
+        pxEllipse(px, 21, 23, 4, 1, LEAF_DARK);
+        pxPut(px, 19, 21, LEAF_LIGHT);
+        return px;
+      }
+      if (plant.style === "clover" && stage >= 3) {
+        stem32(px, 24);
+        flower32(px, plant);
+        return px;
+      }
+      if (stage === 1) {
+        stem32(px, 19);
+        leaf32(px, 15, 24, -1);
+        leaf32(px, 16, 27, 1, 0.85);
+        return px;
+      }
+      if (stage === 2) {
+        stem32(px, 15);
+        leaf32(px, 15, 23, -1);
+        leaf32(px, 16, 26, 1, 0.85);
+        pxEllipse(px, 16, 11, 3, 4, plant.petalDark);
+        pxEllipse(px, 16, 9, 2, 2, plant.petal);
+        pxPut(px, 15, 8, lightC(plant.petal, 36));
+        pxPut(px, 14, 13, LEAF_DARK); pxPut(px, 18, 13, LEAF_DARK); pxPut(px, 16, 14, LEAF);
+        return px;
+      }
+      stem32(px, 16);
+      leaf32(px, 15, 23, -1);
+      leaf32(px, 16, 26, 1, 0.9);
+      flower32(px, plant);
+      return px;
+    }
+    function pixelPlantSVG(plant, stage, silhouette) {
+      var pixels = plantPixels(plant, stage);
+      var seen = {};
+      var order = [];
+      for (var i = 0; i < pixels.length; i++) {
+        var key = pixels[i][0] + "," + pixels[i][1];
+        if (!(key in seen)) order.push(key);
+        seen[key] = pixels[i][2];
+      }
+      var rects = "";
+      for (var j = 0; j < order.length; j++) {
+        var parts = order[j].split(",");
+        rects += '<rect x="' + parts[0] + '" y="' + parts[1] + '" width="1.03" height="1.03" fill="' + seen[order[j]] + '"/>';
+      }
+      var styleAttr = silhouette ? ' style="image-rendering:pixelated;filter:brightness(0);opacity:0.28"' : ' style="image-rendering:pixelated"';
+      return '<svg viewBox="0 0 32 32" shape-rendering="crispEdges" width="100%" height="100%"' + styleAttr + ' aria-hidden="true">' + rects + "</svg>";
+    }
+    function mapSpriteSVG(rows, palette, extraStyle) {
+      var h = rows.length;
+      var w = 0;
+      rows.forEach(function (r) { w = Math.max(w, r.length); });
+      var rects = "";
+      rows.forEach(function (row, y) {
+        for (var x = 0; x < row.length; x++) {
+          var c = palette[row.charAt(x)];
+          if (c) rects += '<rect x="' + x + '" y="' + y + '" width="1.03" height="1.03" fill="' + c + '"/>';
+        }
+      });
+      return '<svg viewBox="0 0 ' + w + " " + h + '" shape-rendering="crispEdges" width="100%" style="image-rendering:pixelated' + (extraStyle || "") + '" aria-hidden="true">' + rects + "</svg>";
+    }
+
+    /* house, built row by row like the original */
+    function buildHouseRows() {
+      var W = 46, H = 20;
+      var grid = [];
+      var yy, xx;
+      for (yy = 0; yy < H; yy++) { var rowArr = []; for (xx = 0; xx < W; xx++) rowArr.push("."); grid.push(rowArr); }
+      function set(x, y, ch) { if (grid[y] && x >= 0 && x < W) grid[y][x] = ch; }
+      function fill(x0, x1, y, ch) { for (var x = x0; x <= x1; x++) set(x, y, ch); }
+      for (yy = 0; yy <= 4; yy++) { set(36, yy, "c"); set(37, yy, "c"); set(38, yy, "C"); }
+      fill(35, 39, 0, "C");
+      for (yy = 3; yy <= 9; yy++) {
+        var left = 12 - (yy - 3) * 2;
+        for (xx = left; xx <= 30; xx++) {
+          var ch = "r";
+          if ((xx + yy * 3) % 7 === 0) ch = "R";
+          if (xx === left) ch = "o";
+          if (xx === left + 1 && yy % 2 === 0) ch = "o";
+          set(xx, yy, ch);
+        }
+        var right = 33 + Math.round((yy - 3) * 1.6);
+        for (xx = 31; xx <= right; xx++) set(xx, yy, (xx + yy) % 6 === 0 ? "r" : "q");
+      }
+      fill(0, 43, 10, "e");
+      for (yy = 11; yy <= 19; yy++) {
+        fill(1, 29, yy, yy === 15 ? "s" : "t");
+        fill(30, 42, yy, yy === 15 ? "U" : "T");
+      }
+      for (yy = 12; yy <= 15; yy++) fill(4, 9, yy, "f");
+      for (yy = 13; yy <= 14; yy++) fill(5, 8, yy, "w");
+      set(5, 13, "g");
+      for (yy = 12; yy <= 19; yy++) fill(22, 26, yy, "d");
+      set(25, 16, "k");
+      fill(21, 27, 19, "k");
+      for (yy = 12; yy <= 14; yy++) fill(33, 37, yy, "f");
+      fill(34, 36, 13, "w");
+      set(34, 13, "g");
+      return grid.map(function (r) { return r.join(""); });
+    }
+    var HOUSE_ROWS = buildHouseRows();
+    function housePalette(windowGlass) {
+      return { r: "#b26a48", R: "#96543a", o: "#c97f57", q: "#8a4a30", e: "#8a5a3b", t: "#f3e6cd", T: "#ecd9b4", U: "#dcc79e", s: "#dcc9a4", f: "#a9805a", w: windowGlass, g: "#ffffff", d: "#a9805a", k: "#6f4e2e", c: "#b08968", C: "#8f6b4c" };
+    }
+
+    var MAILBOX_ROWS = [
+      "..xxxxxxxx..", ".xxrrrrrrxx.", "xxrRRrrrrrxx", "xroorrrrrrrx", "xrrrrrrrrrrx",
+      "xttttttttttx", "xtkttttttttx", "xttttttttttx", "xxxxxttxxxxx", "....xttx....",
+      "...xxttxx...", "...xttttx...", "...xxxxxx..."
+    ];
+    var MAILBOX_PALETTE = { r: "#c06a5e", R: "#a35449", o: "#d18a7d", t: "#a9805a", k: "#6f4e2e", x: "#5d4030" };
+
+    var ANIMAL_ROWS = {
+      neko: ["..............","..k........k..","..kk......kk..","..kkkkkkkkkk..","..kekkkkkkek..","..kkkkkkkkkk..","...kkkkkkkk...","...kkkkkkkk...","..kkkkkkkkkk..","..kkk....kkk..",".kkk......kkk."],
+      kotori: ["..............",".....bb.......","....bbbb......","...bbebby.....","...bbbbbbb....","....bbbbbb....","..w.bbbbb.....","...bbbb.......","....t.t......."],
+      suzume: ["..............",".....bb.......","....bbbb......","...bbebby.....","...bbbbbbb....","....bbbbbb....","..w.bbbbb.....","...bbbb.......","....t.t......."],
+      chou: ["..............","..ww......ww..",".wwww....wwww.",".wwww.bb.wwww.","..ww.bbbb.ww..",".....bbbb.....","..ww.bbbb.ww..",".wwww.bb.wwww.",".wwww....wwww.","..ww......ww.."],
+      hachi: ["..............",".....ww.......","....wwww......","...yyyyyy.....","..yykkyykky...","..yyyyyyyy....","...yyyyyy.....","....t..t......"]
+    };
+    var ANIMAL_PALETTES = {
+      neko: { k: "#e8b083", e: "#5b4636" },
+      kotori: { b: "#a8c8dc", e: "#334155", y: "#d99a3d", w: "#8ab8d4", t: "#c07f35" },
+      suzume: { b: "#b08968", e: "#3f2d20", y: "#e0ac69", w: "#8a6642", t: "#6f4e2e" },
+      chou: { w: "#e5a9c4", b: "#6d4c41" },
+      hachi: { y: "#e8c85a", k: "#44403c", w: "#e0f2fe", t: "#44403c" }
+    };
+
+    var BENCH_ROWS = [
+      "bbbbbbbbbbbbbbbbbbbbbbbb","bbbbbbbbbbbbbbbbbbbbbbbb","BBBBBBBBBBBBBBBBBBBBBBBB","........................",
+      "bbbbbbbbbbbbbbbbbbbbbbbb","bbbbbbbbbbbbbbbbbbbbbbbb","BBBBBBBBBBBBBBBBBBBBBBBB","..ll................ll..",
+      "..ll................ll..","..ll................ll.."
+    ];
+    var BENCH_PALETTE = { b: "#b08968", B: "#8f6b4c", l: "#7a5a40" };
+
+    var LAMP_ROWS = [
+      "....llll....","...llllll...","...lyyyyl...","..lyyyyyyl..","..lygyyyyl..","..lyyyyyyl..",
+      "...llllll...",".....tt.....",".....tt.....",".....tt.....",".....tt.....",".....tt.....","....tttt....","...tttttt..."
+    ];
+    var LAMP_PALETTE_DAY = { l: "#6b5844", y: "#f7ead0", g: "#ffffff", t: "#6b5844" };
+    var LAMP_PALETTE_NIGHT = { l: "#57493a", y: "#ffd98a", g: "#fff3cf", t: "#57493a" };
+
+    var BIRDBATH_ROWS = [
+      "..xxxxxxxxxxxxxxxxxx..",".xxwwwwwwwwwwwwwwwwx..",".xwaaaagaaaaaaaaaawx..",".xwwwwwwwwwwwwwwwwxx..",
+      ".xxwwwwwwwwwwwwwwwwx..","..xxWWWWWWWWWWWWWWxx..","...xxxxxxttxxxxxxxx...","........xttx..........",
+      ".......xxttxx.........","......xxttttxx........","......xttttttx........","......xxxxxxxx........"
+    ];
+    var BIRDBATH_PALETTE = { w: "#c3cabb", W: "#9db3a8", a: "#bcd9ea", g: "#ffffff", t: "#9db3a8", x: "#5f7161" };
+
+    var PLANTER_ROWS = [
+      ".g..g.g...g..g.g.","gGg.gGg.g.gGg.gGg","ggggggggggggggggg","ttttttttttttttttt",
+      "tTtTtTtTtTtTtTtTt","ttttttttttttttttt",".ttttttttttttttt."
+    ];
+    var PLANTER_PALETTE = { g: "#6da05f", G: "#4e7d43", t: "#b08968", T: "#8f6b4c" };
+
+    var TREE_ROWS = [
+      "......cccc......","....cccccccc....","...ccCcccccc....","..ccccccccccc...","..ccCccccCccc...",
+      ".ccccccccccccc..",".ccCccccccCcc...","..cccccccccc....","....cccccc......",".......tt.......",
+      ".......tt.......",".......tt......."
+    ];
+    var TREE_PALETTE = { c: "#8fae7d", C: "#7a9a68", t: "#8a6a4c" };
+
+    var LEAF_ICON = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="image-rendering:pixelated" aria-hidden="true">'
+      + '<rect x="7" y="2" width="2" height="2" fill="#6da05f"/><rect x="5" y="4" width="6" height="2" fill="#6da05f"/>'
+      + '<rect x="4" y="6" width="8" height="2" fill="#4e7d43"/><rect x="5" y="8" width="6" height="2" fill="#4e7d43"/>'
+      + '<rect x="7" y="10" width="2" height="2" fill="#6da05f"/><rect x="8" y="12" width="2" height="3" fill="#476b3e"/></svg>';
+
+    function sparkleSVG(cls, delay, style) {
+      return '<svg viewBox="0 0 12 12" class="sparkle" style="position:absolute;' + (style || "") + 'animation-delay:' + delay + '" width="14" height="14" aria-hidden="true">'
+        + '<polygon points="6,0 7.4,4.6 12,6 7.4,7.4 6,12 4.6,7.4 0,6 4.6,4.6" fill="#fff3c4" stroke="#e8b95d" stroke-width="0.6"/></svg>';
+    }
+
+    /* ================= actions (same rules as the original) ================= */
+    function currentSeason() { return seasonOfMonth(new Date().getMonth() + 1); }
+    function currentShop(now, season) {
+      var today = localDateString(now);
+      return dailyLineup(now, season).map(function (e) {
+        return {
+          plantId: e.plantId,
+          category: e.category,
+          soldOut: e.category === "rare" && S.rareBoughtDate === today && S.rareBoughtPlantId === e.plantId
+        };
+      });
+    }
+    function currentVisitor(now) {
+      if (S.visitorId != null && (S.visitorUntil || 0) > now) return visitorById[S.visitorId] || null;
+      return null;
+    }
+
+    function actBuySeed(plantId) {
+      var now = Date.now();
+      var season = currentSeason();
+      var plant = plantById[plantId];
+      if (!plant) throw new Error("その種はないみたい");
+      var lineup = dailyLineup(now, season);
+      var inLineup = lineup.some(function (e) { return e.plantId === plant.id; });
+      if (!inLineup) throw new Error("今日のお店にはならんでいない種だよ");
+      if (plant.rare) {
+        if (S.discoveries.indexOf(plant.id) < 0) throw new Error("その花はまだ見つけていないよ");
+        if (S.rareBoughtDate === localDateString(now) && S.rareBoughtPlantId === plant.id) {
+          throw new Error("今日は売り切れだよ");
+        }
+      }
+      if (S.leaves < plant.seedCost) throw new Error("はっぱが足りないよ");
+      S.inventory[plant.id] = (S.inventory[plant.id] || 0) + 1;
+      S.leaves -= plant.seedCost;
+      if (plant.rare) { S.rareBoughtDate = localDateString(now); S.rareBoughtPlantId = plant.id; }
+      save();
+    }
+
+    function actPlant(idx, plantId) {
+      var now = Date.now();
+      var plant = plantById[plantId];
+      if (!plant) throw new Error("その種はないみたい");
+      if (idx < 0 || idx >= NUM_PLOTS) throw new Error("そのはたけはまだないよ");
+      if (plant.rare && S.discoveries.indexOf(plant.id) < 0) throw new Error("その花はまだ見つけていないよ");
+      var held = S.inventory[plant.id] || 0;
+      if (held < 1) throw new Error("その種は持っていないよ。お店で買えるよ");
+      var plot = S.plots[idx];
+      if (!plot) throw new Error("はたけがないよ");
+      if (plot.plantId) throw new Error("そこにはもううわっているよ");
+      S.inventory[plant.id] = held - 1;
+      plot.plantId = plant.id;
+      plot.plantedAt = now;
+      plot.boostMs = 0;
+      save();
+    }
+
+    function actWater(idx) {
+      var now = Date.now();
+      var season = currentSeason();
+      var plot = S.plots[idx];
+      if (!plot || !plot.plantId) throw new Error("そこに何もうわっていないよ");
+      var st = plotState(plot, now, season);
+      if (st.ready) return;
+      var growMs = growMsFor(plot.plantId, season);
+      plot.boostMs = Math.min(
+        plot.boostMs + Math.round(growMs * WATER_BOOST_RATIO),
+        Math.round(growMs * WATER_BOOST_CAP_RATIO)
+      );
+      save();
+    }
+
+    function actHarvest(idx) {
+      var now = Date.now();
+      var season = currentSeason();
+      var plot = S.plots[idx];
+      if (!plot || !plot.plantId || plot.plantedAt == null) throw new Error("そこに何もうわっていないよ");
+      var plant = plantById[plot.plantId];
+      if (!plant) throw new Error("花が見つからないよ");
+      if (!plotState(plot, now, season).ready) throw new Error("まださいていないよ");
+
+      // neighbours (ridge plots in PLOT_COLS columns, row-major)
+      var rows = Math.ceil(NUM_PLOTS / PLOT_COLS);
+      var row = Math.floor(idx / PLOT_COLS);
+      var col = idx % PLOT_COLS;
+      var neighborIds = {};
+      var offsets = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      for (var i = 0; i < offsets.length; i++) {
+        var nr = row + offsets[i][0];
+        var nc = col + offsets[i][1];
+        if (nr < 0 || nc < 0 || nr >= rows || nc >= PLOT_COLS) continue;
+        var nIdx = nr * PLOT_COLS + nc;
+        if (nIdx >= NUM_PLOTS) continue;
+        var np = S.plots[nIdx];
+        if (np && np.plantId) neighborIds[np.plantId] = true;
+      }
+
+      var newCount = (S.stats[plant.id] || 0) + 1;
+      S.stats[plant.id] = newCount;
+
+      var discoveredSet = {};
+      S.discoveries.forEach(function (d) { discoveredSet[d] = true; });
+      if (!plant.rare && !discoveredSet[plant.id]) {
+        S.discoveries.push(plant.id);
+        discoveredSet[plant.id] = true;
+      }
+
+      var discovered = null;
+      for (var r = 0; r < DISCOVERY_RULES.length; r++) {
+        var rule = DISCOVERY_RULES[r];
+        if (discoveredSet[rule.rareId]) continue;
+        var hit = false;
+        if (rule.kind === "combo") {
+          var other = plant.id === rule.a ? rule.b : plant.id === rule.b ? rule.a : null;
+          if (other && neighborIds[other]) hit = Math.random() < rule.chance;
+        } else if (rule.kind === "count") {
+          if (plant.id === rule.plantId && newCount >= rule.count) hit = true;
+        } else {
+          if (plant.id === rule.plantId) hit = Math.random() < rule.chance;
+        }
+        if (hit) {
+          var rare = plantById[rule.rareId];
+          if (rare) {
+            S.discoveries.push(rare.id);
+            addJournal("新しい花を見つけた。「" + rare.name + "」", "discovery", now);
+            discovered = { id: rare.id, name: rare.name };
+          }
+          break;
+        }
+      }
+
+      plot.plantId = null;
+      plot.plantedAt = null;
+      plot.boostMs = 0;
+      S.leaves += plant.yieldLeaves;
+      S.totalHarvests += 1;
+      save();
+      return { gained: plant.yieldLeaves, discovered: discovered };
+    }
+
+    function actBuyDecoration(decorationId) {
+      var now = Date.now();
+      var deco = null;
+      DECORATIONS.forEach(function (d) { if (d.id === decorationId) deco = d; });
+      if (!deco) throw new Error("そのかざりはないみたい");
+      if (S.decorations.indexOf(deco.id) >= 0) throw new Error("もう持っているよ");
+      if (S.leaves < deco.cost) throw new Error("はっぱが足りないよ");
+      S.decorations.push(deco.id);
+      S.leaves -= deco.cost;
+      addJournal("「" + deco.name + "」を庭にむかえた。", "garden", now);
+      save();
+    }
+
+    function actWakeFromDream() {
+      var now = Date.now();
+      var fresh = freshSave(now);
+      fresh.journal = [{ id: 1, text: "ゆめからさめて、まっさらな庭に立っていた。ここから、またのんびり始めよう。", kind: "start", createdAt: now }];
+      S = fresh;
+      save();
+    }
+
+    /* ================= UI helpers ================= */
+    function esc(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function formatGrow(min) {
+      if (min < 60) return min + "分くらい";
+      var h = Math.floor(min / 60);
+      var m = min % 60;
+      return m ? h + "時間" + m + "分くらい" : h + "時間くらい";
+    }
+    function formatDateTime(ms) {
+      var d = new Date(ms);
+      var hh = String(d.getHours()).padStart(2, "0");
+      var mm = String(d.getMinutes()).padStart(2, "0");
+      return (d.getMonth() + 1) + "/" + d.getDate() + " " + hh + ":" + mm;
+    }
+    function timeOfDay() {
+      var h = new Date().getHours();
+      if (h >= 5 && h < 10) return "morning";
+      if (h >= 10 && h < 16) return "day";
+      if (h >= 16 && h < 19) return "evening";
+      return "night";
+    }
+    var SKY = {
+      morning: "linear-gradient(180deg,#f7dfba 0%,#e9e4c8 55%,#e6efdb 100%)",
+      day: "linear-gradient(180deg,#a9cdd8 0%,#cfdfc9 70%,#e9efdb 100%)",
+      evening: "linear-gradient(180deg,#e08a52 0%,#eda96a 45%,#f2cd96 75%,#f4dcb2 100%)",
+      night: "linear-gradient(180deg,#33405e 0%,#4a5a7c 70%,#5f718f 100%)"
+    };
+    var TOD_LIGHT = {
+      morning: "linear-gradient(115deg, rgba(255,196,110,0.30) 0%, rgba(255,196,110,0.10) 45%, transparent 70%), linear-gradient(180deg, transparent 55%, rgba(120,90,40,0.10))",
+      day: "linear-gradient(180deg, rgba(255,255,240,0.10) 0%, transparent 45%, rgba(90,110,60,0.06) 100%)",
+      evening: "linear-gradient(245deg, rgba(255,166,77,0.38) 0%, rgba(255,150,80,0.14) 50%, transparent 75%), linear-gradient(180deg, transparent 50%, rgba(120,60,20,0.14))",
+      night: "linear-gradient(180deg, rgba(20,30,60,0.20) 0%, rgba(20,30,60,0.05) 60%, rgba(20,30,60,0.16) 100%)"
+    };
+    var SEASON_TINT = {
+      spring: "rgba(249,168,212,0.10)",
+      summer: "rgba(96,165,250,0.05)",
+      autumn: "rgba(251,146,60,0.12)",
+      winter: "rgba(226,232,240,0.16)"
+    };
+    var STAGE_NAMES = ["め", "わかば", "つぼみ", "かいか"];
+    var SHOP_CATEGORY_LABEL = { always: "いつもの種", season: "きせつの種", random: "ひがわり", rare: "めずらしい種" };
+    var KIND_STYLE = {
+      start: { label: "始まり", color: "#6aa84f" },
+      visitor: { label: "お客さま", color: "#d97706" },
+      life: { label: "くらし", color: "#7c9fc4" },
+      discovery: { label: "発見", color: "#c2703d" },
+      garden: { label: "庭", color: "#43a047" }
+    };
+
+    /* UI state (this session only) */
+    var ui = { tab: "garden", selected: null, toast: null, toastTimer: null, wakeConfirm: false, waterBurstUntil: 0, busy: false };
+
+    function showToast(msg) {
+      ui.toast = msg;
+      var root = document.getElementById("toast-root");
+      root.innerHTML = '<div class="toast anim-gentle-in"><p>' + esc(msg) + "</p></div>";
+      if (ui.toastTimer) clearTimeout(ui.toastTimer);
+      ui.toastTimer = setTimeout(function () {
+        ui.toast = null;
+        root.innerHTML = "";
+      }, 4500);
+    }
+    function fail(e) {
+      showToast(e && e.message ? e.message : "うまくいかなかったみたい");
+    }
+
+    /* ================= scene ================= */
+    var DIAMOND_CLIP = "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)";
+    function tilePos(idx) {
+      var c = idx % 2;
+      var r = Math.floor(idx / 2);
+      return { cx: 57.5 + (c - r) * 17, cy: 16 + (c + r) * 12.3, depth: c + r };
+    }
+
+    function plotCellHTML(plot, st, idx, season) {
+      var pos = tilePos(idx);
+      var plant = plot.plantId ? plantById[plot.plantId] : null;
+      var isSelected = ui.selected === idx;
+      var label;
+      if (!plant) label = "あいているはたけ " + (idx + 1) + "。種をうえられる";
+      else if (st.ready) label = plant.name + "。花がさいている。しゅうかくできる";
+      else label = plant.name + "。今は" + STAGE_NAMES[st.stage || 0] + "のところ";
+      var html = "";
+      if (isSelected) {
+        html += '<div class="abs" style="left:' + pos.cx + '%;top:' + pos.cy + '%;width:37.5%;aspect-ratio:2;transform:translate(-50%,-50%);z-index:' + (16 + pos.depth) + ';pointer-events:none" aria-hidden="true">'
+          + '<svg viewBox="0 0 100 50" width="100%" height="100%" style="overflow:visible">'
+          + '<polygon points="50,1 98,25 50,49 2,25" fill="none" stroke="#3d4c33" stroke-width="5.5" stroke-linejoin="round"/>'
+          + '<polygon points="50,1 98,25 50,49 2,25" fill="none" stroke="#fdf6e3" stroke-width="2.6" stroke-linejoin="round"/></svg></div>';
+      }
+      html += '<div class="abs" style="left:' + pos.cx + '%;top:' + (pos.cy + 2.6) + '%;width:34%;aspect-ratio:2;transform:translate(-50%,-50%);z-index:' + (9 + pos.depth) + ';background:#77532f;clip-path:' + DIAMOND_CLIP + ';pointer-events:none" aria-hidden="true"></div>';
+      html += '<button type="button" class="plot-btn" data-action="select-plot" data-idx="' + idx + '" role="gridcell" aria-label="' + esc(label) + '" aria-pressed="' + (isSelected ? "true" : "false") + '" '
+        + 'style="left:' + pos.cx + '%;top:' + pos.cy + '%;width:34%;aspect-ratio:2;transform:translate(-50%,-50%);z-index:' + (10 + pos.depth) + ';clip-path:' + DIAMOND_CLIP + ';'
+        + 'background:radial-gradient(circle at 30% 30%, rgba(0,0,0,0.10) 1.5px, transparent 1.6px) 0 0/9px 9px, linear-gradient(135deg,#a87f57,#8a6543)">';
+      if (!plant) html += '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:rgba(253,246,227,0.6)">＋</span>';
+      html += "</button>";
+      if (plant) {
+        html += '<div class="abs" style="left:' + pos.cx + '%;top:' + (pos.cy + 1.2) + '%;width:17%;height:5%;transform:translate(-50%,-50%);z-index:' + (14 + pos.depth) + ';background:rgba(0,0,0,0.25);border-radius:100%;filter:blur(1.5px);pointer-events:none" aria-hidden="true"></div>';
+        html += '<div class="abs" style="left:' + pos.cx + '%;top:' + pos.cy + '%;width:27%;transform:translate(-50%,-97%);z-index:' + (18 + pos.depth) + ';pointer-events:none">'
+          + '<span style="position:relative;display:block" class="' + (st.ready ? "anim-bloom" : "") + '">'
+          + pixelPlantSVG(plant, st.stage == null ? 0 : st.stage, false);
+        if (st.ready) {
+          html += sparkleSVG("", "0s", "top:6%;left:8%;width:14px;height:14px")
+            + sparkleSVG("", "0.9s", "top:18%;right:6%;width:12px;height:12px")
+            + sparkleSVG("", "1.7s", "bottom:30%;left:14%;width:10px;height:10px")
+            + '<span class="ready-badge">しゅうかく</span>';
+        }
+        html += "</span></div>";
+      }
+      return html;
+    }
+
+    function sceneHTML(now, season, tod) {
+      var night = tod === "night";
+      var deco = {};
+      S.decorations.forEach(function (d) { deco[d] = true; });
+      var palette = housePalette(night || tod === "evening" ? "#ffd98a" : "#bcd6dd");
+      var visitor = currentVisitor(now);
+      var motes = [
+        { left: "12%", top: "62%", size: 3, delay: "0s", dur: "9s" },
+        { left: "30%", top: "70%", size: 2, delay: "2.2s", dur: "11s" },
+        { left: "55%", top: "58%", size: 3, delay: "4.5s", dur: "10s" },
+        { left: "72%", top: "66%", size: 2, delay: "1.4s", dur: "8.5s" },
+        { left: "86%", top: "55%", size: 3, delay: "6s", dur: "12s" },
+        { left: "44%", top: "76%", size: 2, delay: "7.3s", dur: "9.5s" }
+      ];
+      var html = '<section class="scene" aria-label="庭のようす">';
+      /* sky */
+      html += '<div class="sky" style="background:' + SKY[tod] + '">';
+      html += '<div class="abs" style="inset:0;background:' + SEASON_TINT[season] + '"></div>';
+      html += '<div class="abs" style="left:0;right:0;bottom:0;filter:blur(0.8px);opacity:' + (night ? 0.55 : 0.8) + '" aria-hidden="true">'
+        + '<div class="abs" style="bottom:0;left:0;height:40px;width:65%;border-radius:100%;background:' + (night ? "#42506b" : "#a9bf8f") + '"></div>'
+        + '<div class="abs" style="bottom:0;right:0;height:32px;width:55%;border-radius:100%;background:' + (night ? "#3a4763" : "#9db583") + '"></div>'
+        + '<div class="abs" style="bottom:12px;left:58%;width:36px">' + mapSpriteSVG(TREE_ROWS, TREE_PALETTE) + "</div>"
+        + '<div class="abs" style="bottom:16px;left:78%;width:28px">' + mapSpriteSVG(TREE_ROWS, TREE_PALETTE) + "</div>"
+        + '<div class="abs" style="bottom:8px;left:38%;width:24px;opacity:0.8">' + mapSpriteSVG(TREE_ROWS, TREE_PALETTE) + "</div>"
+        + "</div>";
+      html += '<div class="anim-glow abs" style="top:4px;right:8px;width:64px;height:64px;border-radius:100%;background:radial-gradient(closest-side, ' + (night ? "rgba(245,240,220,0.35)" : "rgba(255,214,120,0.55)") + ', transparent);pointer-events:none" aria-hidden="true"></div>';
+      html += '<div class="abs" style="top:12px;right:16px;width:32px;opacity:0.9">'
+        + mapSpriteSVG(["..cccc..", ".cccccc.", "cccccccc", "cccccccc", ".cccccc.", "..cccc.."], { c: night ? "#f5f0dc" : "#ffd94d" }) + "</div>";
+      var shadowW = tod === "morning" ? "74%" : tod === "evening" ? "68%" : "58%";
+      var shadowT = tod === "morning" ? "transform:translateX(14%) skewX(-18deg);" : tod === "evening" ? "transform:translateX(-16%) skewX(16deg);" : "";
+      html += '<div class="abs" style="bottom:0;left:4%;height:12px;width:' + shadowW + ';border-radius:100%;background:rgba(0,0,0,0.2);filter:blur(2px);' + shadowT + 'pointer-events:none" aria-hidden="true"></div>';
+      html += '<div class="abs" style="bottom:4px;left:8px;width:64%;max-width:250px">' + mapSpriteSVG(HOUSE_ROWS, palette) + "</div>";
+      if (night || tod === "evening") {
+        html += '<div class="anim-glow abs" style="bottom:4px;left:10%;height:48px;width:80px;border-radius:100%;opacity:0.7;background:radial-gradient(closest-side, rgba(255,217,138,0.5), transparent);pointer-events:none"></div>';
+      }
+      html += '<div class="abs" style="bottom:4px;left:52%;width:30%;max-width:120px" aria-hidden="true">'
+        + '<svg viewBox="0 0 40 22" width="100%"><line x1="2" y1="2" x2="38" y2="2" stroke="#8a7a5f" stroke-width="0.8"/><rect x="1" y="2" width="1.6" height="19" fill="#a9805a"/><rect x="37" y="2" width="1.6" height="19" fill="#a9805a"/></svg>'
+        + '<div class="abs" style="top:6%;left:16%;display:flex;gap:8%;width:72%">'
+        + '<span class="anim-sway" style="display:block;height:16px;width:16px;border-radius:2px;background:#fdfdfd;box-shadow:0 1px 2px rgba(0,0,0,0.15)"></span>'
+        + '<span class="anim-sway" style="display:block;height:20px;width:16px;border-radius:2px;background:#f9a8d4;box-shadow:0 1px 2px rgba(0,0,0,0.15);animation-delay:0.7s"></span>'
+        + '<span class="anim-sway" style="display:block;height:16px;width:16px;border-radius:2px;background:#a5d8f0;box-shadow:0 1px 2px rgba(0,0,0,0.15);animation-delay:1.3s"></span>'
+        + "</div></div>";
+      html += '<div class="abs" style="inset:0;background:' + TOD_LIGHT[tod] + ';pointer-events:none" aria-hidden="true"></div>';
+      if (tod === "morning") {
+        html += '<div class="anim-mist abs" style="left:0;right:0;bottom:0;height:40px;background:linear-gradient(180deg, transparent, rgba(255,252,240,0.5));filter:blur(3px);pointer-events:none" aria-hidden="true"></div>';
+      }
+      if (!night) {
+        motes.forEach(function (m) {
+          html += '<span class="particle" style="position:absolute;left:' + m.left + ";top:" + m.top + ";width:" + m.size + "px;height:" + m.size + "px;border-radius:100%;background:" + (tod === "evening" ? "#ffcf8a" : "#fff6d8") + ";box-shadow:0 0 4px 1px rgba(255,240,200,0.7);animation-delay:" + m.delay + ";animation-duration:" + m.dur + ';pointer-events:none" aria-hidden="true"></span>';
+        });
+      }
+      html += "</div>";
+      /* ground */
+      html += '<div class="ground" style="background:linear-gradient(180deg,#8fb573 0%,#7fa663 55%,#74995c 100%);aspect-ratio:1.5">';
+      html += '<div class="abs" style="inset:0;opacity:0.4;background:radial-gradient(circle at 12% 60%, rgba(70,100,50,0.35) 1.5px, transparent 1.6px) 0 0/14px 10px, radial-gradient(circle at 68% 30%, rgba(240,255,220,0.35) 1.5px, transparent 1.6px) 0 0/18px 12px;pointer-events:none" aria-hidden="true"></div>';
+      html += '<div class="abs" style="left:12%;right:2%;top:14%;height:56%;border-radius:100%;background:rgba(0,0,0,0.15);filter:blur(7px);pointer-events:none" aria-hidden="true"></div>';
+      if (deco["stones"]) {
+        html += '<div class="abs" style="inset:0;pointer-events:none" aria-hidden="true">'
+          + '<span class="abs" style="display:block;height:10px;width:24px;border-radius:100%;background:#cfd4c9;box-shadow:0 1px 2px rgba(0,0,0,0.15);left:5%;top:78%"></span>'
+          + '<span class="abs" style="display:block;height:10px;width:24px;border-radius:100%;background:#bcc2b4;box-shadow:0 1px 2px rgba(0,0,0,0.15);left:12%;top:69%"></span>'
+          + '<span class="abs" style="display:block;height:10px;width:24px;border-radius:100%;background:#cfd4c9;box-shadow:0 1px 2px rgba(0,0,0,0.15);left:19%;top:60%"></span></div>';
+      }
+      if (deco["planter"]) {
+        html += '<div class="abs" style="left:4%;top:2%;width:64px;z-index:6">' + mapSpriteSVG(PLANTER_ROWS, PLANTER_PALETTE)
+          + '<div style="margin:0 auto;height:6px;width:48px;border-radius:100%;background:rgba(0,0,0,0.2);filter:blur(1px)" aria-hidden="true"></div></div>';
+      }
+      html += '<div role="grid" aria-label="はたけ">';
+      for (var i = 0; i < NUM_PLOTS; i++) {
+        html += plotCellHTML(S.plots[i], plotState(S.plots[i], now, season), i, season);
+      }
+      html += "</div>";
+      if (deco["bench"]) {
+        html += '<div class="abs" style="right:0;top:34%;width:96px;z-index:15">' + mapSpriteSVG(BENCH_ROWS, BENCH_PALETTE)
+          + '<div style="margin:0 auto;height:8px;width:80px;border-radius:100%;background:rgba(0,0,0,0.2);filter:blur(1.5px)" aria-hidden="true"></div></div>';
+      }
+      if (deco["pinwheel"]) {
+        html += '<div class="abs" style="right:15%;top:4%;width:28px;z-index:8;text-align:center" aria-hidden="true">'
+          + '<svg viewBox="0 0 16 16" class="anim-spin-slow" style="margin:0 auto" width="28" height="28"><polygon points="8,8 8,1 11,4" fill="#f472b6"/><polygon points="8,8 15,8 12,11" fill="#60a5fa"/><polygon points="8,8 8,15 5,12" fill="#facc15"/><polygon points="8,8 1,8 4,5" fill="#66bb6a"/></svg>'
+          + '<div style="margin:0 auto;height:20px;width:2px;background:#a9805a"></div></div>';
+      }
+      if (deco["birdbath"]) {
+        html += '<div class="abs" style="left:1%;top:52%;width:56px;z-index:26">' + mapSpriteSVG(BIRDBATH_ROWS, BIRDBATH_PALETTE)
+          + '<div style="margin:0 auto;height:6px;width:44px;border-radius:100%;background:rgba(0,0,0,0.2);filter:blur(1px)" aria-hidden="true"></div></div>';
+      }
+      if (deco["lamp"]) {
+        html += '<div class="abs" style="right:3%;top:60%;width:28px;z-index:27">' + mapSpriteSVG(LAMP_ROWS, night ? LAMP_PALETTE_NIGHT : LAMP_PALETTE_DAY);
+        if (night || tod === "evening") {
+          html += '<div class="anim-glow" style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);height:56px;width:56px;border-radius:100%;background:radial-gradient(closest-side, rgba(255,217,138,0.55), transparent);pointer-events:none"></div>';
+        }
+        html += "</div>";
+      }
+      html += '<div class="abs" style="left:4%;bottom:3%;width:40px;z-index:30">' + mapSpriteSVG(MAILBOX_ROWS, MAILBOX_PALETTE)
+        + '<div style="margin:0 auto;height:6px;width:32px;border-radius:100%;background:rgba(0,0,0,0.2);filter:blur(1px)" aria-hidden="true"></div></div>';
+      if (visitor) {
+        var vRows = ANIMAL_ROWS[visitor.id] || ANIMAL_ROWS["neko"];
+        var vPal = ANIMAL_PALETTES[visitor.id] || ANIMAL_PALETTES["neko"];
+        html += '<div class="abs" style="right:9%;top:47%;width:56px;z-index:19;text-align:center">'
+          + '<div class="anim-bob">' + mapSpriteSVG(vRows, vPal) + "</div>"
+          + '<div style="margin:-4px auto 0;height:6px;width:40px;border-radius:100%;background:rgba(0,0,0,0.2);filter:blur(1px)" aria-hidden="true"></div>'
+          + '<span class="visitor-label">' + esc(visitor.name) + "が来ている</span></div>";
+      }
+      var groundLight = tod === "evening"
+        ? "linear-gradient(245deg, rgba(255,166,77,0.20), transparent 60%)"
+        : tod === "morning"
+          ? "linear-gradient(115deg, rgba(255,205,120,0.16), transparent 60%)"
+          : tod === "night"
+            ? "linear-gradient(180deg, rgba(20,30,60,0.25), rgba(20,30,60,0.10))"
+            : "linear-gradient(180deg, rgba(255,250,230,0.08), transparent 50%)";
+      html += '<div class="abs" style="inset:0;background:' + groundLight + ';pointer-events:none" aria-hidden="true"></div>';
+      if (deco["fence"]) {
+        html += '<div class="abs" style="left:0;right:0;bottom:0;z-index:40;display:flex;justify-content:space-between;padding:0 4px;pointer-events:none" aria-hidden="true">';
+        for (var f = 0; f < 18; f++) html += '<span style="display:block;height:20px;width:6px;border-radius:2px 2px 0 0;background:#f7f2e2;box-shadow:0 1px 2px rgba(0,0,0,0.15)"></span>';
+        html += "</div>";
+      }
+      html += '<div class="abs" style="left:0;right:0;bottom:0;z-index:40;display:flex;align-items:flex-end;justify-content:space-between;padding:0 2px;filter:blur(0.5px);pointer-events:none" aria-hidden="true">';
+      for (var g = 0; g < 30; g++) {
+        html += '<span style="display:block;width:4px;border-radius:999px 999px 0 0;height:' + (7 + ((g * 7) % 6)) + "px;background:" + (g % 3 === 0 ? "#557f45" : "#679550") + '"></span>';
+      }
+      html += "</div>";
+      html += "</div></section>";
+      return html;
+    }
+
+    /* ================= garden tab ================= */
+    function plotPanelHTML(now, season) {
+      if (ui.selected == null) return "";
+      var idx = ui.selected;
+      var plot = S.plots[idx];
+      if (!plot) return "";
+      var st = plotState(plot, now, season);
+      var plant = plot.plantId ? plantById[plot.plantId] : null;
+      if (!plant) {
+        var shop = currentShop(now, season);
+        var inShopToday = {};
+        shop.forEach(function (s) { inShopToday[s.plantId] = true; });
+        var seeds = PLANTS.filter(function (p) { return (S.inventory[p.id] || 0) > 0; });
+        var shopOnly = PLANTS.filter(function (p) {
+          return (S.inventory[p.id] || 0) === 0 && inShopToday[p.id] && (!p.rare || S.discoveries.indexOf(p.id) >= 0);
+        });
+        var html = '<div class="card panel-tight anim-gentle-in"><p class="small" style="font-weight:700;margin:0 0 8px">どの種をうえる？</p>';
+        if (seeds.length === 0) {
+          html += '<p class="small dim" style="line-height:1.7;margin:0">今は持っている種がないみたい。お店に種があるよ。</p>'
+            + '<button type="button" class="btn-primary" style="margin-top:12px" data-action="go-shop">お店へ行く</button>';
+        } else {
+          html += '<div class="grid2">';
+          seeds.forEach(function (seed) {
+            var count = S.inventory[seed.id] || 0;
+            html += '<button type="button" class="seed-btn" data-action="plant" data-idx="' + idx + '" data-plant="' + seed.id + '" '
+              + 'aria-label="' + esc(seed.name + "をうえる。持っている数" + count + "、育つまで" + formatGrow(seed.growMin)) + '"' + (ui.busy ? " disabled" : "") + ">"
+              + '<span class="seed-art">' + pixelPlantSVG(seed, 3, false) + "</span>"
+              + '<span style="min-width:0"><span class="seed-name">' + esc(seed.name) + '</span>'
+              + '<span class="seed-meta"><span>' + formatGrow(seed.growMin) + "</span><span>・ 持っている " + count + "こ</span>"
+              + (seed.season === season ? "<span>・ 今のきせつ</span>" : "")
+              + "</span></span></button>";
+          });
+          html += "</div>";
+          if (shopOnly.length > 0) {
+            html += '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">'
+              + '<p class="tiny dim" style="margin:0 0 6px">今日のお店で買える種（まだ持っていないもの）</p><div>';
+            shopOnly.forEach(function (seed) {
+              html += '<button type="button" class="shop-only-row" data-action="go-shop" aria-label="' + esc(seed.name + "はお店で買える。はっぱ" + seed.seedCost + "まい") + '">'
+                + '<span class="seed-art">' + pixelPlantSVG(seed, 3, false) + "</span>"
+                + '<span class="seed-name">' + esc(seed.name) + '</span>'
+                + '<span class="tiny dim" style="white-space:nowrap">お店で買えるよ ・ はっぱ' + seed.seedCost + "まい</span></button>";
+            });
+            html += "</div></div>";
+          }
+        }
+        html += "</div>";
+        return html;
+      }
+      var burst = Date.now() < ui.waterBurstUntil;
+      var showSparkles = st.ready || burst;
+      var pct = Math.max(4, Math.round(st.progress * 100));
+      var html2 = '<div class="card panel anim-gentle-in"><div style="display:flex;align-items:center;gap:12px">'
+        + '<span style="position:relative;width:56px;height:56px;flex-shrink:0">' + pixelPlantSVG(plant, st.stage == null ? 0 : st.stage, false);
+      if (showSparkles) {
+        html2 += sparkleSVG("", "0s", "top:-4px;left:-4px;width:14px;height:14px")
+          + sparkleSVG("", "0.7s", "top:8px;right:-6px;width:12px;height:12px")
+          + sparkleSVG("", "1.3s", "bottom:-4px;left:12px;width:10px;height:10px");
+      }
+      html2 += "</span>"
+        + '<div style="min-width:0;flex:1"><p style="font-weight:700;margin:0">' + esc(plant.name)
+        + '<span class="small dim" style="margin-left:8px;font-weight:500">' + STAGE_NAMES[st.stage || 0] + "</span></p>"
+        + '<div class="progress" role="progressbar" aria-valuenow="' + Math.round(st.progress * 100) + '" aria-label="育ちぐあい"><div style="width:' + pct + '%"></div></div>'
+        + '<p class="tiny dim" style="margin:4px 0 0">' + (st.ready ? "さいたよ。しゅうかくできる。" : "ゆっくり育っているところ。") + "</p></div></div>"
+        + '<div style="margin-top:12px;display:flex;gap:8px">';
+      if (!st.ready) {
+        html2 += '<button type="button" class="btn-water" data-action="water" data-idx="' + idx + '" aria-label="' + esc(plant.name + "に水をやる") + '"' + (ui.busy ? " disabled" : "") + ">水をやる</button>";
+      } else {
+        html2 += '<button type="button" class="btn-primary" style="flex:1;width:auto" data-action="harvest" data-idx="' + idx + '" aria-label="' + esc(plant.name + "をしゅうかくする。はっぱ" + plant.yieldLeaves + "まい") + '"' + (ui.busy ? " disabled" : "") + ">しゅうかくする（はっぱ +" + plant.yieldLeaves + "）</button>";
+      }
+      html2 += "</div></div>";
+      return html2;
+    }
+
+    function gardenHTML(now, season, tod) {
+      var gardenDays = Math.max(1, localDayNumber(now) - localDayNumber(S.startedAt) + 1);
+      var isFirstTime = S.totalHarvests === 0 && S.plots.every(function (p) { return !p.plantId; });
+      var html = '<p class="greeting">おかえり。庭は元気だよ。</p>';
+      html += sceneHTML(now, season, tod);
+      if (isFirstTime) {
+        html += '<p class="hint-box anim-gentle-in">空いているはたけをタップして、持っている種をうえてみてね。種はお店ではっぱを使って買えるよ。育って花がさいたら、しゅうかくしてはっぱを増やそう。かれることはないから、のんびりでだいじょうぶ。</p>';
+      }
+      html += plotPanelHTML(now, season);
+      html += '<div class="card records">'
+        + '<div><p class="rec-value">' + gardenDays + '日</p><p class="rec-label">初めてから</p></div>'
+        + '<div><p class="rec-value">' + S.totalHarvests + 'かい</p><p class="rec-label">しゅうかく</p></div>'
+        + '<div><p class="rec-value">' + S.discoveries.length + " / " + PLANTS.length + '</p><p class="rec-label">ずかん</p></div>'
+        + "</div>";
+      return html;
+    }
+
+    /* ================= book tab ================= */
+    function bookHTML(now, season) {
+      var found = {};
+      S.discoveries.forEach(function (d) { found[d] = true; });
+      var html = '<h2 class="tab-title">花のずかん</h2>'
+        + '<p class="small dim" style="margin:0 0 12px">見つけた花 ' + S.discoveries.length + " / " + PLANTS.length + "。あせらなくてもだいじょうぶ。庭の時間とともに、ゆっくり増えていくよ。</p>"
+        + '<div class="book-grid">';
+      PLANTS.forEach(function (plant) {
+        var discovered = !!found[plant.id];
+        if (plant.rare && !discovered) {
+          html += '<div class="card book-entry"><div class="art">' + pixelPlantSVG(plant, 3, true) + "</div>"
+            + '<p class="name dim">？？？</p>'
+            + '<p class="tiny rare-line" style="margin:4px 0 0">・めずらしい花</p>'
+            + '<p class="tiny dim" style="margin:4px 0 0;line-height:1.7;text-align:left">' + esc(plant.hint) + "</p></div>";
+          return;
+        }
+        html += '<div class="card book-entry"><div class="art">' + pixelPlantSVG(plant, 3, false) + "</div>"
+          + '<p class="name">' + esc(plant.name) + "</p>"
+          + "<ul><li>・育つまで " + formatGrow(plant.growMin) + "</li>"
+          + "<li>・種ははっぱ " + plant.seedCost + "まい</li>"
+          + "<li>・しゅうかくで はっぱ " + plant.yieldLeaves + "まい</li>"
+          + (plant.rare ? '<li class="rare-line">・めずらしい花</li>' : "")
+          + "</ul>";
+        if (plant.rare) {
+          html += '<p class="tiny rare-line" style="margin:4px 0 0;font-weight:700">見つけた花</p>';
+        } else if (!discovered) {
+          html += '<p class="tiny dim" style="margin:4px 0 0">まだしゅうかくしたことがない</p>';
+        } else {
+          html += '<p class="tiny dim" style="margin:4px 0 0">' + (plant.season === season ? "今のきせつに育ちやすい" : SEASON_NAMES[plant.season || season] + "に育ちやすい") + "</p>";
+        }
+        html += "</div>";
+      });
+      html += "</div>";
+      return html;
+    }
+
+    /* ================= journal tab ================= */
+    function journalHTML() {
+      var html = '<h2 class="tab-title" style="padding-bottom:12px">にっし</h2>';
+      var entries = S.journal.slice(0, 60);
+      if (entries.length === 0) {
+        html += '<p class="small dim">まだ何も書かれていない。これから少しずつ増えていくよ。</p>';
+      } else {
+        html += '<ul class="journal-list">';
+        entries.forEach(function (entry) {
+          var kind = KIND_STYLE[entry.kind] || KIND_STYLE["garden"];
+          html += '<li class="card journal-item"><span class="journal-dot" style="background:' + kind.color + '" aria-hidden="true"></span>'
+            + "<div><p>" + esc(entry.text) + '</p><p class="tiny dim" style="padding-top:2px">' + kind.label + " ・ " + formatDateTime(entry.createdAt) + "</p></div></li>";
+        });
+        html += "</ul>";
+      }
+      html += '<div class="wake-zone">';
+      if (!ui.wakeConfirm) {
+        html += '<button type="button" class="wake-link" data-action="wake-ask">夢から覚める</button>';
+      } else {
+        html += '<div class="card wake-confirm anim-gentle-in">'
+          + '<p class="small" style="font-weight:700;line-height:1.7;margin:0">夢から覚めます（初期化）よろしいですか？</p>'
+          + '<p class="tiny dim" style="line-height:1.7;margin:6px 0 0">庭も、はっぱも、ずかんも、全部まっさらになって、新しい庭が始まるよ。</p>'
+          + '<div style="margin-top:12px;display:flex;gap:8px">'
+          + '<button type="button" class="btn-wake" data-action="wake-yes">覚める</button>'
+          + '<button type="button" class="btn-stay" data-action="wake-no">まだ夢の中にいる</button>'
+          + "</div></div>";
+      }
+      html += "</div>";
+      return html;
+    }
+
+    /* ================= shop tab ================= */
+    function decoThumbHTML(id) {
+      if (id === "bench") return '<span class="deco-thumb" style="width:56px">' + mapSpriteSVG(BENCH_ROWS, BENCH_PALETTE) + "</span>";
+      if (id === "lamp") return '<span class="deco-thumb" style="width:28px">' + mapSpriteSVG(LAMP_ROWS, LAMP_PALETTE_NIGHT) + "</span>";
+      if (id === "birdbath") return '<span class="deco-thumb" style="width:48px">' + mapSpriteSVG(BIRDBATH_ROWS, BIRDBATH_PALETTE) + "</span>";
+      if (id === "planter") return '<span class="deco-thumb" style="width:56px">' + mapSpriteSVG(PLANTER_ROWS, PLANTER_PALETTE) + "</span>";
+      if (id === "fence") {
+        var s = '<span class="deco-thumb" style="width:48px" aria-hidden="true"><span style="display:flex;width:100%;align-items:flex-end;justify-content:space-between;padding:0 2px">';
+        for (var i = 0; i < 5; i++) s += '<span style="display:block;height:20px;width:6px;border-radius:2px 2px 0 0;background:#e8e2d2;box-shadow:inset 0 0 0 1px #d8d0ba"></span>';
+        return s + "</span></span>";
+      }
+      if (id === "stones") {
+        return '<span class="deco-thumb" style="width:48px" aria-hidden="true"><span style="display:flex;align-items:center;gap:4px"><span style="display:block;height:10px;width:16px;border-radius:100%;background:#cfd4c9"></span><span style="display:block;height:10px;width:16px;border-radius:100%;background:#bcc2b4"></span></span></span>';
+      }
+      return '<span class="deco-thumb" style="width:32px" aria-hidden="true"><svg viewBox="0 0 16 16" width="32" height="32"><polygon points="8,8 8,1 11,4" fill="#f472b6"/><polygon points="8,8 15,8 12,11" fill="#60a5fa"/><polygon points="8,8 8,15 5,12" fill="#facc15"/><polygon points="8,8 1,8 4,5" fill="#66bb6a"/></svg></span>';
+    }
+
+    function shopHTML(now, season) {
+      var owned = {};
+      S.decorations.forEach(function (d) { owned[d] = true; });
+      var discovered = {};
+      S.discoveries.forEach(function (d) { discovered[d] = true; });
+      var shop = currentShop(now, season);
+      var html = '<h2 class="tab-title">お店</h2>'
+        + '<p class="small dim" style="line-height:1.7;margin:0 0 12px">今は' + SEASON_NAMES[season] + "のころ。種ははっぱを使って買えるよ。はたけでは、持っている種から選んでうえてね。</p>"
+        + '<h3 class="sub-title" style="padding-bottom:4px">今日の種</h3>'
+        + '<p class="tiny dim" style="margin:0 0 10px">ならぶ種は毎日変わるよ。持っているはっぱ ' + S.leaves + " まい</p><div>";
+      shop.forEach(function (entry) {
+        var seed = plantById[entry.plantId];
+        if (!seed) return;
+        var count = S.inventory[seed.id] || 0;
+        var locked = seed.rare && !discovered[seed.id];
+        var afford = S.leaves >= seed.seedCost;
+        html += '<div class="card shop-card"><div class="shop-head">'
+          + '<span class="shop-art">' + pixelPlantSVG(seed, 3, locked) + "</span>"
+          + '<div style="min-width:0;flex:1"><p class="shop-name-row"><span class="shop-name">' + (locked ? "？？？" : esc(seed.name)) + "</span>"
+          + '<span class="badge">' + SHOP_CATEGORY_LABEL[entry.category] + "</span></p>";
+        if (locked) {
+          html += '<ul class="item-list"><li>・めずらしい花</li><li style="padding-top:2px">まだ見つけていない花。庭で出会えたら、買えるようになるよ</li></ul>';
+        } else {
+          html += '<ul class="item-list"><li>・育つまで ' + formatGrow(seed.growMin) + "</li>"
+            + "<li>・しゅうかくで はっぱ" + seed.yieldLeaves + "まい</li>"
+            + "<li>・持っている " + count + "こ</li>";
+          if (seed.rare) {
+            html += entry.soldOut
+              ? '<li class="rare-line">・めずらしい花（今日は売り切れ）</li>'
+              : '<li class="rare-line">・めずらしい花（買えるのは あと1こ）</li>';
+          }
+          html += "</ul>";
+        }
+        html += "</div></div>";
+        if (!locked) {
+          html += '<div class="shop-buy-row">';
+          if (entry.soldOut) {
+            html += '<span class="pill-off">今日は売り切れ</span>';
+          } else {
+            html += '<button type="button" class="btn-buy" data-action="buy-seed" data-plant="' + seed.id + '" aria-label="' + esc(seed.name + "の種を買う。はっぱ" + seed.seedCost + "まい。持っている" + count + "こ") + '"' + (ui.busy || !afford ? " disabled" : "") + ">はっぱ " + seed.seedCost + "</button>";
+          }
+          html += "</div>";
+        }
+        html += "</div>";
+      });
+      html += '</div><h3 class="sub-title" style="padding:20px 0 8px">庭のかざり</h3><div>';
+      DECORATIONS.forEach(function (deco) {
+        var has = !!owned[deco.id];
+        var afford = S.leaves >= deco.cost;
+        html += '<div class="card deco-row">' + decoThumbHTML(deco.id)
+          + '<div style="min-width:0;flex:1"><p class="deco-name">' + esc(deco.name) + '</p><p class="deco-desc">' + esc(deco.desc) + "</p></div>";
+        if (has) {
+          html += '<span class="pill-owned">庭にある</span>';
+        } else {
+          html += '<button type="button" class="btn-buy btn-buy-sm" data-action="buy-deco" data-deco="' + deco.id + '" aria-label="' + esc(deco.name + "を買う。はっぱ" + deco.cost + "まい") + '"' + (ui.busy || !afford ? " disabled" : "") + ">はっぱ " + deco.cost + "</button>";
+        }
+        html += "</div>";
+      });
+      html += '</div><p class="tiny dim" style="padding-top:16px;text-align:center;margin:0">' + DECORATIONS.length + "しゅるいのかざりは、庭の見た目が変わるだけのもの。のんびり集めてね。</p>";
+      return html;
+    }
+
+    /* ================= render ================= */
+    var NAV_ITEMS = [
+      { tab: "garden", label: "にわ", icon: null },
+      { tab: "book", label: "ずかん", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h13"/></svg>' },
+      { tab: "journal", label: "にっし", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>' },
+      { tab: "shop", label: "おみせ", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9h16v11H4z"/><path d="M9 20v-6h6v6"/></svg>' }
+    ];
+    function renderTabbar() {
+      var html = "";
+      NAV_ITEMS.forEach(function (item) {
+        html += '<button type="button" class="tab-btn' + (ui.tab === item.tab ? " active" : "") + '" data-action="tab" data-tab="' + item.tab + '"'
+          + (ui.tab === item.tab ? ' aria-current="page"' : "") + ">"
+          + (item.icon || LEAF_ICON) + esc(item.label) + "</button>";
+      });
+      document.getElementById("tabbar").innerHTML = html;
+    }
+
+    function render() {
+      var now = Date.now();
+      var season = currentSeason();
+      var tod = timeOfDay();
+      var gardenDays = Math.max(1, localDayNumber(now) - localDayNumber(S.startedAt) + 1);
+      var html = '<div class="status-row"><span class="leaf-pill">' + LEAF_ICON + S.leaves + "</span>"
+        + '<span class="status-note">' + SEASON_NAMES[season] + "の庭 ・ " + gardenDays + "日目</span></div>";
+      if (ui.tab === "garden") html += gardenHTML(now, season, tod);
+      else if (ui.tab === "book") html += bookHTML(now, season);
+      else if (ui.tab === "journal") html += journalHTML();
+      else html += shopHTML(now, season);
+      var app = document.getElementById("app");
+      var y = window.scrollY;
+      app.innerHTML = html;
+      window.scrollTo(0, y);
+      renderTabbar();
+    }
+
+    /* ================= events ================= */
+    document.addEventListener("click", function (ev) {
+      var el = ev.target;
+      while (el && el !== document.body) {
+        if (el.getAttribute && el.getAttribute("data-action")) break;
+        el = el.parentNode;
+      }
+      if (!el || !el.getAttribute) return;
+      var action = el.getAttribute("data-action");
+      try {
+        if (action === "tab") {
+          ui.tab = el.getAttribute("data-tab");
+          ui.wakeConfirm = false;
+          render();
+          window.scrollTo(0, 0);
+        } else if (action === "select-plot") {
+          ui.selected = parseInt(el.getAttribute("data-idx"), 10);
+          render();
+        } else if (action === "go-shop") {
+          ui.tab = "shop";
+          render();
+          window.scrollTo(0, 0);
+        } else if (action === "plant") {
+          actPlant(parseInt(el.getAttribute("data-idx"), 10), el.getAttribute("data-plant"));
+          render();
+        } else if (action === "water") {
+          ui.waterBurstUntil = Date.now() + 1600;
+          actWater(parseInt(el.getAttribute("data-idx"), 10));
+          render();
+        } else if (action === "harvest") {
+          var res = actHarvest(parseInt(el.getAttribute("data-idx"), 10));
+          render();
+          if (res.discovered) showToast("新しい花を見つけた。「" + res.discovered.name + "」");
+          else showToast("しゅうかくした。はっぱ +" + res.gained);
+        } else if (action === "buy-seed") {
+          actBuySeed(el.getAttribute("data-plant"));
+          render();
+        } else if (action === "buy-deco") {
+          actBuyDecoration(el.getAttribute("data-deco"));
+          render();
+        } else if (action === "wake-ask") {
+          ui.wakeConfirm = true;
+          render();
+        } else if (action === "wake-no") {
+          ui.wakeConfirm = false;
+          render();
+        } else if (action === "wake-yes") {
+          ui.wakeConfirm = false;
+          actWakeFromDream();
+          ui.selected = null;
+          ui.tab = "garden";
+          render();
+          window.scrollTo(0, 0);
+          showToast("まっさらな庭になったよ");
+        }
+      } catch (e) {
+        fail(e);
+        render();
+      }
+    });
+
+    /* ================= init ================= */
+    var bootNow = Date.now();
+    S = loadSave(bootNow);
+    onOpen(bootNow, currentSeason());
+    render();
+    /* growth keeps moving while the page is open (the original refreshed every minute) */
+    setInterval(function () {
+      if (document.hidden) return;
+      render();
+    }, 30000);
+    </script>
+  </body>
+</html>
